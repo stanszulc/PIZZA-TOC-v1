@@ -13,23 +13,23 @@ function fmt(s) {
   return s < 60 ? s + 's' : Math.floor(s / 60) + 'm' + (s % 60 ? ' ' + (s % 60) + 's' : '');
 }
 function bufColor(pct) {
-  if (pct > 100) return '#6b7280';
-  if (pct > 66)  return '#dc2626';
-  if (pct > 33)  return '#d97706';
-  return '#16a34a';
+  if (pct > 100) return '#111827'; // Czarny — Spóźnione
+  if (pct > 66)  return '#dc2626'; // Czerwony
+  if (pct > 33)  return '#d97706'; // Żółty
+  return '#16a34a';                // Zielony
 }
 
 // ── STAN ───────────────────────────────────────────────────────────────────
 function createState() {
   return {
-    running: false, toc: false, auto: false,
-    speed: 1, wipLimit: 20, bakeTime: 300, autoInterval: 30,
+    running: false, toc: false, auto: true,
+    speed: 1, wipLimit: 20, bakeTime: 300, autoInterval: 120,
     simTime: 0, nextId: 1,
     orders: [], wip: [], oven: [null, null], done: [],
     chef: null,
     chefBusyTime: 0, ovenBusyTime: 0, totalTime: 0,
     waste: 0, maxWip: 0, leadTimes: [],
-    autoTimer: 0, logs: [],
+    autoTimer: 120, logs: [],
   };
 }
 
@@ -327,9 +327,17 @@ export default function App() {
   const cu = totalTime > 0 ? Math.round(chefBusyTime / totalTime * 100) : 0;
   const ou = totalTime > 0 ? Math.round(ovenBusyTime / (totalTime * 2) * 100) : 0;
   const ropeActive = toc && oven.some(x => x === null) && !chef;
+  const ovenHasFreeSlot = oven.some(x => x === null);
 
   return (
     <div className="app">
+
+      {/* ZEGAR */}
+      <div className="sim-clock">
+        <span className="sim-clock-icon">{running ? '▶' : '⏸'}</span>
+        <span className="sim-clock-time">{fmt(simTime)}</span>
+        <span className="sim-clock-label">czas symulacji</span>
+      </div>
 
       {/* TOP BAR */}
       <div className="top-bar">
@@ -353,7 +361,7 @@ export default function App() {
         <button className={`btn ${auto ? 'active' : ''}`} onClick={handleAuto}>Auto: {auto ? 'WŁ' : 'WYŁ'}</button>
         <div className="ctrl-group">
           co <span className="ctrl-val">{autoInterval}s</span>
-          <input type="range" min="5" max="120" step="5" value={autoInterval} onChange={e => setState(prev => ({ ...prev, autoInterval: parseInt(e.target.value), autoTimer: parseInt(e.target.value) }))} />
+          <input type="range" min="5" max="180" step="5" value={autoInterval} onChange={e => setState(prev => ({ ...prev, autoInterval: parseInt(e.target.value), autoTimer: parseInt(e.target.value) }))} />
         </div>
         <div className="divider" />
         <button className="btn mur" onClick={handleMurphy}>Murphy!</button>
@@ -383,27 +391,87 @@ export default function App() {
         {/* KOLEJKA */}
         <div className="station">
           <div className="station-header">
-            <span className="station-title">📋 Kolejka zamówień</span>
-            <span className={`station-badge ${queue.length > 5 ? 'warn' : ''}`}>{queue.length}</span>
+            <span className="station-title">📋 Zamówienia</span>
+            <span className={`station-badge ${queue.length > 5 ? 'warn' : ''}`}>{orders.filter(o => o.status !== 'done').length} aktywnych</span>
           </div>
           <div className="order-list">
-            {queue.length
-              ? queue.map(o => <OrderCard key={o.id} order={o} simTime={simTime} />)
-              : <div className="empty">Brak zamówień</div>}
+            {orders.filter(o => o.status !== 'done').length ? (
+              orders.filter(o => o.status !== 'done').map(o => {
+                const pct = Math.min(120, ((simTime - o.start) / DEAD) * 100);
+                const col = bufColor(pct);
+                const statusLabel = { queue: 'Kolejka', prep: 'Przygot.', wip: 'Blat', 'wip-bad': 'Blat ⚠', oven: 'Piec' }[o.status] || o.status;
+                const statusColor = { queue: '#6b7280', prep: '#2563eb', wip: '#d97706', 'wip-bad': '#dc2626', oven: '#ea580c' }[o.status] || '#6b7280';
+                return (
+                  <div key={o.id} className="ocard" style={ pct > 100 ? { borderColor: '#111827', background: '#f9fafb' } : {}}>
+                    <div className="ocard-top">
+                      <span className="oid">#{o.id}</span>
+                      <span className="oname">{o.name}</span>
+                      {o.murphy && <span className="warn">⚠</span>}
+                      <span style={{ fontSize: 9, fontWeight: 700, color: statusColor, background: statusColor + '18', padding: '1px 5px', borderRadius: 4, whiteSpace: 'nowrap' }}>{statusLabel}</span>
+                    </div>
+                    <div className="bbar">
+                      <div className="bfill" style={{ width: Math.min(100, pct) + '%', background: col }} />
+                    </div>
+                    <div className="bpct" style={{ color: col, fontWeight: pct > 66 ? 700 : 500 }}>
+                      {Math.round(pct)}%{pct > 100 ? ' — SPÓŹNIONE' : pct > 66 ? ' — PILNE' : ''}
+                    </div>
+                  </div>
+                );
+              })
+            ) : <div className="empty">Brak aktywnych zamówień</div>}
           </div>
         </div>
 
-        {/* LINA */}
+        {/* SYGNAŁ BLAT — kolejka → kucharz (zawsze widoczny) */}
         <div className="arrow-col">
-          <div className={`rope-arrow ${ropeActive ? 'active' : ''}`}>→</div>
-          {ropeActive && <div className="rope-lbl">LINA</div>}
+          <div className="rope-signal">
+            {wip.length < wipLimit ? (
+              <>
+                <div className="rs-label">WIP OK</div>
+                <div className="rs-arrows">
+                  <span className="rs-arr rs-arr-r rs-arr-1">→</span>
+                  <span className="rs-arr rs-arr-r rs-arr-2">→</span>
+                  <span className="rs-arr rs-arr-r rs-arr-3">→</span>
+                </div>
+                <div className="rs-sublabel">blat wolny</div>
+              </>
+            ) : (
+              <>
+                <div className="rs-label rs-label-off">BLAT PEŁNY</div>
+                <div className="rs-arrows rs-off">
+                  <span className="rs-arr">→</span>
+                  <span className="rs-arr">→</span>
+                  <span className="rs-arr">→</span>
+                </div>
+                <div className="rs-sublabel rs-sublabel-off">stop</div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* KUCHARZ */}
         <div className="station">
           <div className="station-header">
             <span className="station-title">👨‍🍳 Kucharz</span>
-            <span className={`station-badge ${chef ? 'ok' : ''}`}>{chef ? 'Pracuje' : 'Czeka'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="oee-gauge">
+                <svg width="36" height="36" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#e5e7eb" strokeWidth="4"/>
+                  <circle cx="18" cy="18" r="14" fill="none"
+                    stroke={cu >= 80 ? '#16a34a' : cu >= 50 ? '#d97706' : '#dc2626'}
+                    strokeWidth="4"
+                    strokeDasharray={`${(cu / 100) * 87.96} 87.96`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                    style={{ transition: 'stroke-dasharray 0.5s' }}
+                  />
+                  <text x="18" y="22" textAnchor="middle" fontSize="9" fontWeight="700"
+                    fill={cu >= 80 ? '#16a34a' : cu >= 50 ? '#d97706' : '#dc2626'}>{cu}%</text>
+                </svg>
+                <span className="oee-lbl">OEE</span>
+              </div>
+              <span className={`station-badge ${chef ? 'ok' : ''}`}>{chef ? 'Pracuje' : 'Czeka'}</span>
+            </div>
           </div>
 
           {chef ? (
@@ -439,18 +507,62 @@ export default function App() {
           </div>
         </div>
 
-        {/* STRZAŁKA */}
+        {/* SYGNAŁ PULL — piec → kucharz (tylko TOC) */}
         <div className="arrow-col">
-          <div className="rope-arrow" style={{ opacity: 0.2 }}>→</div>
+          {toc ? (
+            <div className="rope-signal">
+              {ovenHasFreeSlot ? (
+                <>
+                  <div className="rs-label">PULL</div>
+                  <div className="rs-arrows">
+                    <span className="rs-arr rs-arr-1">←</span>
+                    <span className="rs-arr rs-arr-2">←</span>
+                    <span className="rs-arr rs-arr-3">←</span>
+                  </div>
+                  <div className="rs-sublabel">wolny slot</div>
+                </>
+              ) : (
+                <>
+                  <div className="rs-label rs-label-off">WAIT</div>
+                  <div className="rs-arrows rs-off">
+                    <span className="rs-arr">←</span>
+                    <span className="rs-arr">←</span>
+                    <span className="rs-arr">←</span>
+                  </div>
+                  <div className="rs-sublabel rs-sublabel-off">piec pełny</div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="rope-arrow" style={{ opacity: 0.15, fontSize: 20 }}>→</div>
+          )}
         </div>
 
         {/* PIEC */}
         <div className="station">
           <div className="station-header">
             <span className="station-title">🔥 Piec</span>
-            <span className={`station-badge ${oven.some(x => x !== null) ? 'ok' : ''}`}>
-              {oven.filter(x => x !== null).length}/2 slotów
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="oee-gauge">
+                <svg width="36" height="36" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#e5e7eb" strokeWidth="4"/>
+                  <circle cx="18" cy="18" r="14" fill="none"
+                    stroke={ou >= 80 ? '#16a34a' : ou >= 50 ? '#d97706' : '#dc2626'}
+                    strokeWidth="4"
+                    strokeDasharray={`${(ou / 100) * 87.96} 87.96`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                    style={{ transition: 'stroke-dasharray 0.5s' }}
+                  />
+                  <text x="18" y="22" textAnchor="middle" fontSize="9" fontWeight="700"
+                    fill={ou >= 80 ? '#16a34a' : ou >= 50 ? '#d97706' : '#dc2626'}>{ou}%</text>
+                </svg>
+                <span className="oee-lbl">OEE</span>
+              </div>
+              <span className={`station-badge ${oven.some(x => x !== null) ? 'ok' : ''}`}>
+                {oven.filter(x => x !== null).length}/2 slotów
+              </span>
+            </div>
           </div>
 
           <div className="oven-ctrl">
