@@ -157,14 +157,37 @@ body {
 .chef-card .ocard-top { margin-bottom: 6px; }
 .chef-card .oid { color: #1d4ed8; }
 
-/* WIP */
+/* WIP SECTION */
 .wip-section { margin-top: 12px; }
-.wip-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-.wip-count { font-size: 11px; font-weight: 700; color: #dc2626; background: #fef2f2; padding: 1px 6px; border-radius: 10px; }
-.wip-zone { display: flex; flex-wrap: wrap; gap: 3px; min-height: 36px; align-items: center; padding: 6px; background: #f9fafb; border-radius: 8px; border: 1px dashed #e2e5ea; }
-.wpiz { font-size: 20px; cursor: default; line-height: 1; }
-.wpiz.bad { opacity: 0.25; filter: grayscale(1); }
+.wip-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+.wip-count { font-size: 10px; font-weight: 700; color: #dc2626; background: #fef2f2; padding: 1px 6px; border-radius: 10px; }
 .wip-overflow { font-size: 11px; font-weight: 600; color: #9ca3af; }
+
+/* WIP TILES */
+.wip-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 36px;
+  align-items: flex-start;
+  padding: 6px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #e2e5ea;
+}
+.wip-tile {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 3px 5px; border-radius: 6px; border: 1.5px solid;
+  min-width: 36px; cursor: default;
+}
+.wip-tile-ok  { border-color: #86efac; background: #f0fdf4; }
+.wip-tile-bad { border-color: #fca5a5; background: #fef2f2; animation: wip-bad-pulse 1.5s ease-in-out infinite; }
+@keyframes wip-bad-pulse { 0%,100%{border-color:#fca5a5} 50%{border-color:#dc2626} }
+.wip-tile-icon { font-size: 14px; line-height: 1; }
+.wip-tile-id   { font-size: 8px; font-weight: 700; color: #9ca3af; line-height: 1; }
+.wip-tile-missing { font-size: 7px; color: #dc2626; font-weight: 700; line-height: 1; margin-top: 1px; max-width: 36px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
 
 /* OVEN SLOTS */
 .oven-slots { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -207,3 +230,97 @@ body {
   .arrow-col { min-height: 24px; }
   .kpi-row { grid-template-columns: repeat(4, minmax(0,1fr)); }
 }
+
+/* TABS */
+.tabs { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #e2e5ea; }
+.tab-btn { padding: 8px 18px; font-size: 13px; font-weight: 500; border: none; background: transparent; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.tab-btn:hover { color: #374151; }
+.tab-active { color: #2563eb; border-bottom-color: #2563eb; }
+.tab-badge-warn { font-size: 10px; font-weight: 700; background: #fef2f2; color: #dc2626; padding: 1px 6px; border-radius: 10px; }
+
+/* STOCK BAR */
+.stock-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #e2e5ea; border-radius: 10px;
+  padding: 8px 14px; margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.stock-bar-label { font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+.stock-toggle {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid; transition: all 0.2s;
+}
+.stock-toggle-on  { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
+.stock-toggle-on:hover  { background: #dcfce7; }
+.stock-toggle-off { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.stock-toggle-off:hover { background: #fee2e2; }
+.stock-toggle-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor;
+}
+.stock-toggle-off .stock-toggle-dot { animation: dot-pulse 0.8s ease-in-out infinite; }
+@keyframes dot-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.stock-bar-blocked { font-size: 11px; font-weight: 600; color: #dc2626; margin-left: 4px; }
+
+/* STOCK BANNER */
+.stock-banner { background: #fef9c3; border: 1px solid #fde047; border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #854d0e; margin-bottom: 1rem; }
+
+/* WASTE in orders */
+.ocard-blocked { border-color: #fca5a5; background: #fff5f5; }
+.ocard-waste { border-color: #dc2626; background: #fef2f2; }
+.waste-x { font-size: 12px; font-weight: 800; color: #dc2626; }
+.missing-label { font-size: 9px; color: #dc2626; font-weight: 600; margin-bottom: 3px; }
+
+/* CHEF WASTE */
+.chef-card-waste { border-color: #dc2626; background: #fef2f2; }
+.waste-warn-msg { font-size: 10px; color: #dc2626; font-weight: 600; margin-bottom: 6px; padding: 4px 6px; background: #fee2e2; border-radius: 4px; }
+
+/* WASTE SECTION */
+.waste-section { margin-top: 10px; border-top: 1px dashed #fca5a5; padding-top: 8px; }
+.waste-title { font-size: 10px; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.waste-list { display: flex; flex-direction: column; gap: 3px; }
+.waste-item { display: flex; align-items: center; gap: 5px; padding: 3px 6px; background: #fef2f2; border-radius: 5px; border: 0.5px solid #fca5a5; }
+.waste-missing { font-size: 9px; color: #dc2626; font-weight: 600; margin-left: auto; }
+
+/* WASTE KPI PULSE */
+.waste-pulse { animation: waste-flash 0.3s ease-in-out 4; }
+@keyframes waste-flash { 0%,100%{color:#dc2626} 50%{color:#fff;background:#dc2626;border-radius:4px} }
+.kpi-sub { font-size: 9px; color: #dc2626; margin-top: 2px; font-weight: 500; }
+
+/* LOG WASTE */
+.le-waste { color: #dc2626; font-weight: 600; }
+
+/* BOM TAB */
+.bom-tab { display: flex; flex-direction: column; gap: 1.5rem; }
+.bom-section { background: #fff; border: 1px solid #e2e5ea; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.bom-title { font-size: 15px; font-weight: 700; color: #1a1d23; margin-bottom: 6px; }
+.bom-desc { font-size: 12px; color: #6b7280; margin-bottom: 16px; line-height: 1.6; }
+
+/* STOCK GRID */
+.stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.stock-card { background: #f9fafb; border: 1px solid #e2e5ea; border-radius: 10px; padding: 12px; transition: all 0.2s; }
+.stock-out { background: #fef2f2; border-color: #fca5a5; }
+.stock-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.stock-name { font-size: 14px; font-weight: 600; color: #1a1d23; }
+.stock-out .stock-name { color: #dc2626; }
+.stock-status { font-size: 11px; font-weight: 600; color: #16a34a; margin-bottom: 8px; }
+.stock-out .stock-status { color: #dc2626; }
+.stock-affects { font-size: 10px; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.pizza-tag { background: #eff6ff; color: #2563eb; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
+.pizza-tag-blocked { background: #fef2f2; color: #dc2626; text-decoration: line-through; }
+
+/* BOM TABLE */
+.bom-table-wrap { overflow-x: auto; }
+.bom-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bom-table th { padding: 8px 10px; text-align: center; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e2e5ea; background: #f9fafb; font-size: 11px; }
+.bom-table th:first-child { text-align: left; }
+.bom-table td { padding: 7px 10px; text-align: center; border-bottom: 1px solid #f3f4f6; color: #374151; }
+.bom-table td:first-child { text-align: left; }
+.bom-pizza-name { font-weight: 500; }
+.th-blocked { color: #dc2626 !important; background: #fef2f2 !important; }
+.tr-blocked { background: #fff5f5; }
+.cell-missing { color: #dc2626; font-weight: 700; background: #fee2e2; }
+.bom-blocked-badge { font-size: 10px; font-weight: 600; color: #dc2626; background: #fee2e2; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.bom-ok-badge { font-size: 10px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 2px 7px; border-radius: 10px; }
